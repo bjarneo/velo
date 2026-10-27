@@ -110,12 +110,21 @@ a:hover { color: var(--cyan); text-decoration-color: currentColor; }
   position: relative;
   max-width: 1240px;
   margin: clamp(10px, 3vw, 40px) auto;
-  border: 2px solid transparent;
-  background:
-    linear-gradient(var(--bg), var(--bg)) padding-box,
-    linear-gradient(135deg, var(--cyan), var(--mag)) border-box;
-  background-attachment: scroll, fixed;
+  background: var(--bg);
   box-shadow: 0 24px 80px -20px rgb(0 0 0 / .6);
+}
+
+/* the 2px frame: a viewport-fixed gradient, masked to a ring around the window */
+.window::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  padding: 2px;
+  background: linear-gradient(135deg, var(--cyan), var(--mag)) fixed;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  pointer-events: none;
 }
 
 .inner { padding: var(--pad); padding-bottom: 0; }
