@@ -12,7 +12,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 )
 
-const version = "0.1.0"
+const version = "0.1.1"
 
 func main() {
 	demo := flag.Bool("demo", false, "simulate the network instead of testing it")
