@@ -429,6 +429,7 @@ pre.out .ln { display: block; transition: opacity .22s cubic-bezier(.16, 1, .3, 
   .cmd .keycap { display: inline-flex; margin-left: 8px; vertical-align: 1px; }
   .bar .status { font-size: 12px; }
   .foot .keys button:nth-child(n+5) { display: none; }
+  .foot .hotkeys { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
