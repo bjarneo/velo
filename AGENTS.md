@@ -28,7 +28,7 @@ This file tells coding agents how to install velo for a user, how to read its re
 
    The output is `velo <version>`. When the shell cannot find `velo`, add `~/.local/bin` to `PATH`.
 
-4. When step 2 is not possible, install with Go 1.25 or later:
+4. When step 2 is not possible, install with Go 1.26 or later:
 
    ```sh
    go install github.com/bjarneo/velo@latest

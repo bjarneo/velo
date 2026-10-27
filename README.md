@@ -41,7 +41,7 @@ Then press `Super` + `Space` and type `velo`.
 
 ### With Go
 
-velo needs Go 1.25 or later.
+velo needs Go 1.26 or later.
 
 ```sh
 go install github.com/bjarneo/velo@latest
