@@ -12,6 +12,7 @@
 </p>
 
 <p align="center">
+  <a href="https://bjarneo.github.io/velo/">Website</a> ·
   <a href="https://github.com/bjarneo/velo/releases/latest">Download</a> ·
   <a href="assets/velo.mp4">Watch the video</a> ·
   <a href="docs/measurement.md">How velo measures</a> ·

@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en" data-theme="tokyo-night">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>velo · a speed test for your terminal</title>
+<meta name="description" content="velo measures latency, download, upload, and bufferbloat, and shows each phase live in your terminal. Install it on Omarchy and other Linux with one command.">
+<meta name="theme-color" content="#1a1b26">
+<link rel="icon" href="assets/icon.png" type="image/png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="velo · a speed test for your terminal">
+<meta property="og:description" content="Latency, download, upload, and bufferbloat, live on a cockpit dashboard in your terminal.">
+<meta property="og:url" content="https://bjarneo.github.io/velo/">
+<meta property="og:image" content="https://bjarneo.github.io/velo/assets/screenshot-complete.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="fonts/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/JetBrainsMono-ExtraBold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="style.css">
+<script>
+  // Apply the saved theme before the first paint.
+  try { var t = localStorage.getItem("velo-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+</head>
+<body>
+<canvas class="field" aria-hidden="true"></canvas>
+
+<main class="window" id="top">
+  <div class="inner">
+    <header class="bar">
+      <a class="badge" href="#top" aria-label="velo">
+        <svg viewBox="0 0 412 118" role="img" aria-hidden="true"><rect class="b-bg" width="412" height="118"/><path class="b-fg" d="M62.92 82.44L93.64 82.44L93.64 35.72ZZM179.33 82.44L167.55 35.72L175.82 35.72L182.91 66.19Q183.49 68.42 183.94 71.05Q184.46 73.61 184.71 75.14Q184.96 73.61 185.41 71.05Q185.93 68.42 186.50 66.12L193.35 35.72L201.47 35.72L189.71 82.44L179.33 82.44ZM224.06 82.44L224.06 35.72L252.09 35.72L252.09 42.75L231.94 42.75L231.94 54.92L249.86 54.92L249.86 61.70L231.94 61.70L231.94 75.39L252.09 75.39L252.09 82.44L224.06 82.44ZM279.31 82.44L279.31 35.72L287.31 35.72L287.31 75.20L307.14 75.20L307.14 82.44L279.31 82.44ZM343.88 83.08Q337.16 83.08 333.19 79.23Q329.29 75.39 329.29 68.61L329.29 49.55Q329.29 42.75 333.19 38.92Q337.16 35.08 343.88 35.08Q350.60 35.08 354.51 38.92Q358.47 42.75 358.47 49.48L358.47 68.61Q358.47 75.39 354.51 79.23Q350.60 83.08 343.88 83.08M343.88 76.03Q347.15 76.03 348.80 74.31Q350.47 72.52 350.47 69.25L350.47 48.91Q350.47 45.64 348.80 43.91Q347.15 42.12 343.88 42.12Q340.61 42.12 338.94 43.91Q337.29 45.64 337.29 48.91L337.29 69.25Q337.29 72.52 338.94 74.31Q340.61 76.03 343.88 76.03Z"/></svg>
+      </a>
+      <span class="status">v0.1.0 · linux amd64 arm64 · <b>● READY</b></span>
+    </header>
+
+    <section class="beat" id="install" data-beat>
+      <h1><span class="hash">#</span> A speed test for your terminal.</h1>
+      <p class="lede">velo measures latency, download, upload, and bufferbloat against the nearest speedtest.net server. It shows each phase live, in the colors of your Omarchy theme.</p>
+
+      <div class="cmd primary">
+        <span class="prompt"><span class="tilde">~</span> <span class="arrow">❯</span></span>
+        <code data-type>curl -fsSL https://raw.githubusercontent.com/bjarneo/velo/main/install.sh | sh</code>
+        <button class="keycap" type="button" data-copy="curl -fsSL https://raw.githubusercontent.com/bjarneo/velo/main/install.sh | sh">copy</button>
+      </div>
+      <pre class="out reveal"><span class="dim">velo:</span> download velo_0.1.0_linux_amd64.tar.gz
+<span class="dim">velo:</span> installed 0.1.0 to /home/you/.local/bin/velo
+<span class="dim">velo:</span> run velo to start a test</pre>
+
+      <p class="comment reveal"><span class="hash">#</span> Add velo to the Omarchy launcher. Then press Super + Space and type velo.</p>
+      <div class="cmd reveal">
+        <span class="prompt"><span class="tilde">~</span> <span class="arrow">❯</span></span>
+        <code>omarchy-tui-install velo velo tile https://raw.githubusercontent.com/bjarneo/velo/main/assets/icon.png</code>
+        <button class="keycap" type="button" data-copy="omarchy-tui-install velo velo tile https://raw.githubusercontent.com/bjarneo/velo/main/assets/icon.png">copy</button>
+      </div>
+    </section>
+
+    <section class="beat run" id="run" data-beat>
+      <h2><span class="hash">#</span> Run a test. A test takes about 20 seconds.</h2>
+      <div class="cmd">
+        <span class="prompt"><span class="tilde">~</span> <span class="arrow">❯</span></span>
+        <code data-type>velo --private</code>
+      </div>
+      <figure class="panel recording reveal">
+        <span class="title">RECORDING</span>
+        <span class="tag">foot on Omarchy · real Wi-Fi</span>
+        <video src="assets/velo.mp4" poster="assets/screenshot-download.png" autoplay muted loop playsinline preload="metadata"
+          aria-label="velo runs a real speed test: latency 4.0 ms, download 495.8 Mbps, upload 495.6 Mbps, grade C"></video>
+        <span class="tag bottom"><button class="keycap" type="button" id="play">pause</button></span>
+      </figure>
+      <pre class="out reveal">velo: session closed · last run ↓ 495.8 ↑ 495.6 Mbps · 4.0 ms · C</pre>
+      <p class="comment reveal"><span class="hash">#</span> --private masks the IP address. Use it when you share a screenshot or a recording.</p>
+    </section>
+
+    <section class="beat" id="keys" data-beat>
+      <h2><span class="hash">#</span> One key per action. Press the keys on this page: it answers like velo.</h2>
+      <div class="keys-grid reveal">
+        <div class="panel">
+          <span class="title">KEYS</span>
+          <span class="tag">click or press</span>
+          <ul class="keylist">
+            <li><button type="button" data-key="enter" aria-pressed="true"><span class="cap">⏎</span>run the test</button></li>
+            <li><button type="button" data-key="s" aria-pressed="false"><span class="cap">s</span>choose a server</button></li>
+            <li><button type="button" data-key="h" aria-pressed="false"><span class="cap">h</span>show the history</button></li>
+            <li><button type="button" data-key="t" aria-pressed="false"><span class="cap">t</span>cycle the theme</button></li>
+            <li><button type="button" data-key="?" aria-pressed="false"><span class="cap">?</span>show every key</button></li>
+            <li><button type="button" data-key="q" aria-pressed="false"><span class="cap">q</span>quit</button></li>
+          </ul>
+        </div>
+        <figure class="panel screen">
+          <span class="title">SCREEN</span>
+          <span class="tag" id="screen-tag">real run</span>
+          <img id="screen-img" src="assets/screenshot-complete.png" width="1920" height="1166" loading="lazy" decoding="async"
+            alt="velo after a finished test: download 495.8 Mbps, upload 495.6 Mbps, grade C">
+          <figcaption id="screen-cap" aria-live="polite">⏎ runs the test. This run used Wi-Fi in foot on Omarchy.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="beat" id="flags" data-beat>
+      <h2><span class="hash">#</span> Six flags. velo starts a test without any.</h2>
+      <div class="cmd">
+        <span class="prompt"><span class="tilde">~</span> <span class="arrow">❯</span></span>
+        <code data-type>velo --help</code>
+      </div>
+      <pre class="out reveal">usage: velo [flags]
+
+  -demo
+    	simulate the network instead of testing it
+  -no-autostart
+    	wait for ⏎ instead of starting a test
+  -private
+    	mask the client IP address, for screenshots and recordings
+  -server string
+    	use the speedtest.net server with this id, as the server list shows it
+  -theme string
+    	start with this theme, for example "nord"
+  -version
+    	print the version and exit
+
+themes: omarchy, tokyo-night, catppuccin, gruvbox, nord, everforest, kanagawa, rosé-pine, matte-black</pre>
+      <p class="comment reveal"><span class="hash">#</span> Not on Linux amd64 or arm64? Install with Go 1.26 or later.</p>
+      <div class="cmd reveal">
+        <span class="prompt"><span class="tilde">~</span> <span class="arrow">❯</span></span>
+        <code>go install github.com/bjarneo/velo@latest</code>
+        <button class="keycap" type="button" data-copy="go install github.com/bjarneo/velo@latest">copy</button>
+      </div>
+    </section>
+
+    <section class="beat" id="measure" data-beat>
+      <h2><span class="hash">#</span> How velo measures. Each value has a documented method.</h2>
+      <div class="cmd">
+        <span class="prompt"><span class="tilde">~</span> <span class="arrow">❯</span></span>
+        <code data-type>less docs/measurement.md</code>
+      </div>
+      <div class="measure reveal">
+        <div class="panel">
+          <span class="title">SEQUENCE</span>
+          <span class="tag">the run in the recording</span>
+          <ol class="steps" style="list-style:none;margin:0;padding:0">
+            <li class="step" style="--c: var(--yel)">
+              <div class="step-head"><span><span class="n">01</span><span class="name">LATENCY</span></span><span class="val">4.0 ms ✓</span></div>
+              <div class="bar"></div>
+              <p>24 HTTP probes on one warm connection. Ping is the mean time. Jitter is the mean change between 2 probes.</p>
+            </li>
+            <li class="step" style="--c: var(--cyan)">
+              <div class="step-head"><span><span class="n">02</span><span class="name">DOWNLOAD</span></span><span class="val">495.8 Mbps ✓</span></div>
+              <div class="bar"></div>
+              <p>16 streams for 8 seconds. velo counts the bytes that it reads and takes a sample every 50 ms.</p>
+            </li>
+            <li class="step" style="--c: var(--mag)">
+              <div class="step-head"><span><span class="n">03</span><span class="name">UPLOAD</span></span><span class="val">495.6 Mbps ✓</span></div>
+              <div class="bar"></div>
+              <p>16 streams for 7 seconds. On Linux, velo counts only the bytes that the server acknowledged.</p>
+            </li>
+            <li class="step" style="--c: var(--acc)">
+              <div class="step-head"><span><span class="n">04</span><span class="name">ANALYZE</span></span><span class="val">grade C ✓</span></div>
+              <div class="bar"></div>
+              <p>A latency probe every 250 ms under load. Bufferbloat is the loaded latency minus the idle latency.</p>
+            </li>
+          </ol>
+        </div>
+        <div class="panel">
+          <span class="title">GRADE</span>
+          <span class="tag">bufferbloat</span>
+          <table class="grades">
+            <thead><tr><th>bufferbloat</th><th style="text-align:right">grade</th></tr></thead>
+            <tbody>
+              <tr><td>less than 5 ms</td><td><span class="g" style="background:var(--grn)">A+</span></td></tr>
+              <tr><td>less than 30 ms</td><td><span class="g" style="background:var(--grn)">A</span></td></tr>
+              <tr><td>less than 60 ms</td><td><span class="g" style="background:var(--yel)">B</span></td></tr>
+              <tr class="this"><td>less than 200 ms</td><td><span class="g" style="background:var(--red)">C</span></td></tr>
+              <tr><td>200 ms or more</td><td><span class="g" style="background:var(--red)">D</span></td></tr>
+            </tbody>
+          </table>
+          <p class="comment">This run: +74.7 ms on Wi-Fi.</p>
+        </div>
+      </div>
+      <p class="comment reveal"><span class="hash">#</span> Read the full method, the endpoints, and the limits in <a href="https://github.com/bjarneo/velo/blob/main/docs/measurement.md">docs/measurement.md</a>.</p>
+    </section>
+
+    <section class="beat" id="results" data-beat>
+      <h2><span class="hash">#</span> velo saves each run as one JSON line. Scripts and agents can read it.</h2>
+      <div class="cmd">
+        <span class="prompt"><span class="tilde">~</span> <span class="arrow">❯</span></span>
+        <code data-type>tail -n 1 ~/.local/share/velo/history.jsonl | jq</code>
+      </div>
+      <pre class="out json reveal"><span class="p">{</span>
+  <span class="k">"id"</span><span class="p">:</span> <span class="n">2</span><span class="p">,</span>
+  <span class="k">"time"</span><span class="p">:</span> <span class="s">"2026-10-27T18:31:48+01:00"</span><span class="p">,</span>
+  <span class="k">"server"</span><span class="p">:</span> <span class="s">"Lyse Tele AS · Oslo"</span><span class="p">,</span>
+  <span class="k">"host"</span><span class="p">:</span> <span class="s">"ulvspeedtestben1.altibox.net:8080"</span><span class="p">,</span>
+  <span class="k">"ping_ms"</span><span class="p">:</span> <span class="n">3.96</span><span class="p">,</span>
+  <span class="k">"jitter_ms"</span><span class="p">:</span> <span class="n">0.32</span><span class="p">,</span>
+  <span class="k">"down_mbps"</span><span class="p">:</span> <span class="n">495.84</span><span class="p">,</span>
+  <span class="k">"up_mbps"</span><span class="p">:</span> <span class="n">495.56</span><span class="p">,</span>
+  <span class="k">"bloat_ms"</span><span class="p">:</span> <span class="n">74.69</span><span class="p">,</span>
+  <span class="k">"loss_pct"</span><span class="p">:</span> <span class="n">0</span><span class="p">,</span>
+  <span class="k">"grade"</span><span class="p">:</span> <span class="s">"C"</span><span class="p">,</span>
+  <span class="k">"data_mb"</span><span class="p">:</span> <span class="n">945.34</span>
+<span class="p">}</span></pre>
+      <p class="comment reveal"><span class="hash">#</span> Coding agents: <a href="https://github.com/bjarneo/velo/blob/main/AGENTS.md">AGENTS.md</a> tells you how to install velo and how to read this file.</p>
+    </section>
+
+    <section class="beat close" id="close" data-beat>
+      <h2><span class="hash">#</span> velo 0.1.0 runs on Linux amd64 and arm64. It is written in Go with Bubble Tea.</h2>
+      <div class="cmd">
+        <span class="prompt"><span class="tilde">~</span> <span class="arrow">❯</span></span>
+        <code><span class="cursor" aria-hidden="true"></span></code>
+      </div>
+      <nav class="links reveal" aria-label="Project links">
+        <a href="https://github.com/bjarneo/velo"><span class="cap">g</span>source on GitHub</a>
+        <a href="https://github.com/bjarneo/velo/releases/latest"><span class="cap">r</span>release 0.1.0</a>
+        <a href="https://github.com/bjarneo/velo/tree/main/docs"><span class="cap">d</span>documentation</a>
+        <a href="https://github.com/bjarneo/velo/blob/main/AGENTS.md"><span class="cap">a</span>AGENTS.md</a>
+      </nav>
+    </section>
+  </div>
+
+  <footer class="foot">
+    <div class="keys">
+      <button type="button" data-key="enter"><span class="cap">⏎</span>run</button>
+      <button type="button" data-key="s"><span class="cap">s</span>server</button>
+      <button type="button" data-key="h"><span class="cap">h</span>history</button>
+      <button type="button" data-key="t"><span class="cap">t</span>theme</button>
+      <button type="button" data-key="?"><span class="cap">?</span>keys</button>
+      <button type="button" data-key="q"><span class="cap">q</span>quit</button>
+    </div>
+    <span class="theme-name" id="theme-name">tokyo night · press t</span>
+  </footer>
+</main>
+
+<script src="app.js" defer></script>
+</body>
+</html>
