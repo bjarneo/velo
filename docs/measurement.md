@@ -6,8 +6,9 @@ This page describes each value that velo shows, how velo measures it, and the li
 
 1. velo requests the 10 nearest servers from `https://www.speedtest.net/api/js/servers?engine=js&https_functional=true&limit=10`.
 2. velo sorts the servers by distance.
-3. velo opens one connection to each server and sends 3 requests for `latency.txt`. The first request opens the connection. velo keeps the lower time of the other 2 requests.
-4. velo selects the server with the lowest time. When no server answers, velo selects the nearest server.
+3. velo sends all test requests to the `host` of each server. The `url` from the list gives only the scheme and the path. Most `url` hosts answer with a `307` redirect to the `host`. Go does not follow a redirect for an upload body.
+4. velo opens one connection to each server and sends 3 requests for `latency.txt`. The first request opens the connection. velo keeps the lower time of the other 2 requests.
+5. velo selects the server with the lowest time. When no server answers, velo selects the nearest server.
 
 At the same time, velo requests `https://www.speedtest.net/speedtest-config.php` for your IP address and your ISP.
 
@@ -35,6 +36,8 @@ velo opens 16 parallel HTTP streams for 7 seconds. Each stream sends `POST` requ
 On Linux, velo counts the bytes that the server acknowledged. velo reads `tcpi_bytes_acked` from `TCP_INFO` on each connection. A count of written bytes also includes data that only waits in the socket buffers. That count shows a false peak when the streams open.
 
 On other systems, velo counts the bytes that it writes.
+
+A server that rejects an upload request still acknowledges the start of the body. When no request gets `200 OK` and 16 or more requests get another status, the upload phase fails with that status. Example: `upload failed · 307 Temporary Redirect`.
 
 ## Throughput samples
 

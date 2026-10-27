@@ -10,6 +10,7 @@ import (
 	"math/rand/v2"
 	"net"
 	"net/http"
+	"net/url"
 	"sort"
 	"strings"
 	"sync"
@@ -82,9 +83,10 @@ func fetchServers(ctx context.Context) ([]Server, error) {
 		if !strings.HasSuffix(s.URL, "upload.php") {
 			continue
 		}
+		up := endpoint(s.URL, s.Host)
 		out = append(out, Server{
 			ID: s.ID, Sponsor: s.Sponsor, City: s.Name, Country: s.Country, CC: s.CC, Host: s.Host,
-			URL: s.URL, Base: strings.TrimSuffix(s.URL, "upload.php"), Km: s.Distance,
+			URL: up, Base: strings.TrimSuffix(up, "upload.php"), Km: s.Distance,
 		})
 	}
 	if len(out) == 0 {
@@ -92,6 +94,18 @@ func fetchServers(ctx context.Context) ([]Server, error) {
 	}
 	sort.SliceStable(out, func(i, j int) bool { return out[i].Km < out[j].Km })
 	return out, nil
+}
+
+// endpoint puts the host of a server into its upload URL. Most list URLs
+// answer with a redirect to the host. net/http does not follow a redirect
+// for an upload body, so velo sends all requests to the host directly.
+func endpoint(raw, host string) string {
+	u, err := url.Parse(raw)
+	if err != nil || host == "" {
+		return raw
+	}
+	u.Host = host
+	return u.String()
 }
 
 func fetchClient(ctx context.Context) (Client, error) {
@@ -246,6 +260,7 @@ func transfer(r *Run, pc *http.Client, down bool) error {
 	}}
 	defer tc.CloseIdleConnections()
 	var moved atomic.Int64
+	var rep uploadReplies
 	count := moved.Load
 	if _, ok := ack.acked(); ok && !down {
 		count = func() int64 {
@@ -263,7 +278,7 @@ func transfer(r *Run, pc *http.Client, down bool) error {
 			if down {
 				downloadStream(ctx, tc, sv.Base+"random4000x4000.jpg", &moved)
 			} else {
-				uploadStream(ctx, tc, sv.URL, &moved)
+				uploadStream(ctx, tc, sv.URL, &moved, &rep)
 			}
 		})
 	}
@@ -298,6 +313,9 @@ func transfer(r *Run, pc *http.Client, down bool) error {
 	wg.Wait()
 	if r.ctx.Err() != nil {
 		return r.ctx.Err()
+	}
+	if err := rep.err(); err != nil {
+		return err
 	}
 	total := count()
 	if total == 0 {
@@ -354,7 +372,35 @@ func (c *countReader) Read(p []byte) (int, error) {
 	return k, nil
 }
 
-func uploadStream(ctx context.Context, cl *http.Client, url string, n *atomic.Int64) {
+// uploadReplies counts the HTTP replies to the upload requests.
+type uploadReplies struct {
+	ok, bad atomic.Int64
+	status  atomic.Pointer[string]
+}
+
+// add counts one reply and reports whether the server accepted the upload.
+func (u *uploadReplies) add(resp *http.Response) bool {
+	if resp.StatusCode == http.StatusOK {
+		u.ok.Add(1)
+		return true
+	}
+	u.bad.Add(1)
+	u.status.CompareAndSwap(nil, &resp.Status)
+	return false
+}
+
+// err reports a server that rejects the uploads. The server acknowledges the
+// start of each rejected request, so the byte count alone shows a low rate.
+// One rejection is not enough. On a slow link no request ends during the
+// phase, and one error would hide the measurement.
+func (u *uploadReplies) err() error {
+	if u.ok.Load() == 0 && u.bad.Load() >= streams {
+		return errors.New(*u.status.Load())
+	}
+	return nil
+}
+
+func uploadStream(ctx context.Context, cl *http.Client, url string, n *atomic.Int64, rep *uploadReplies) {
 	for ctx.Err() == nil {
 		req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, &countReader{left: uploadChunk, n: n})
 		if err != nil {
@@ -370,6 +416,9 @@ func uploadStream(ctx context.Context, cl *http.Client, url string, n *atomic.In
 		}
 		io.Copy(io.Discard, resp.Body)
 		resp.Body.Close()
+		if !rep.add(resp) {
+			pause(ctx, 200*time.Millisecond)
+		}
 	}
 }
 

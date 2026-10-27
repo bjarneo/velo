@@ -1,11 +1,15 @@
 package main
 
 import (
+	"context"
 	"io"
 	"math"
+	"net/http"
+	"net/http/httptest"
 	"path/filepath"
 	"slices"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -138,6 +142,61 @@ func TestCountReader(t *testing.T) {
 	b, err := io.ReadAll(&countReader{left: 3<<20 + 7, n: &n})
 	if err != nil || len(b) != 3<<20+7 || n.Load() != int64(len(b)) {
 		t.Errorf("read %d bytes, counted %d, err %v", len(b), n.Load(), err)
+	}
+}
+
+func TestEndpoint(t *testing.T) {
+	cases := []struct{ raw, host, want string }{
+		{"http://attgaook.speedtest.sbcglobal.net:8080/speedtest/upload.php",
+			"attgaook.speedtest.sbcglobal.net.prod.hosts.ooklaserver.net:8080",
+			"http://attgaook.speedtest.sbcglobal.net.prod.hosts.ooklaserver.net:8080/speedtest/upload.php"},
+		{"http://test.telenor.net:8080/speedtest/upload.php", "test.telenor.net:8080",
+			"http://test.telenor.net:8080/speedtest/upload.php"},
+		{"http://a.example:8080/speedtest/upload.php", "",
+			"http://a.example:8080/speedtest/upload.php"},
+	}
+	for _, c := range cases {
+		if got := endpoint(c.raw, c.host); got != c.want {
+			t.Errorf("endpoint(%q, %q) = %q, want %q", c.raw, c.host, got, c.want)
+		}
+	}
+}
+
+// uploadFor runs the upload streams against h for d and returns the replies.
+func uploadFor(t *testing.T, h http.HandlerFunc, d time.Duration) *uploadReplies {
+	t.Helper()
+	srv := httptest.NewServer(h)
+	defer srv.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), d)
+	defer cancel()
+	cl := srv.Client()
+	var n atomic.Int64
+	var rep uploadReplies
+	var wg sync.WaitGroup
+	for range streams {
+		wg.Go(func() { uploadStream(ctx, cl, srv.URL+"/speedtest/upload.php", &n, &rep) })
+	}
+	wg.Wait()
+	return &rep
+}
+
+func TestUploadRedirectFails(t *testing.T) {
+	rep := uploadFor(t, func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "https://elsewhere.example:8080/speedtest/upload.php", http.StatusTemporaryRedirect)
+	}, 1500*time.Millisecond)
+	err := rep.err()
+	if err == nil || err.Error() != "307 Temporary Redirect" {
+		t.Fatalf("err = %v, want 307 Temporary Redirect (ok %d, bad %d)", err, rep.ok.Load(), rep.bad.Load())
+	}
+}
+
+func TestUploadAccepted(t *testing.T) {
+	rep := uploadFor(t, func(w http.ResponseWriter, r *http.Request) {
+		io.Copy(io.Discard, r.Body)
+		io.WriteString(w, "size=8388608")
+	}, 1500*time.Millisecond)
+	if err := rep.err(); err != nil || rep.ok.Load() == 0 {
+		t.Fatalf("err = %v, ok %d, bad %d", err, rep.ok.Load(), rep.bad.Load())
 	}
 }
 
