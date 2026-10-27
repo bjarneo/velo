@@ -1,6 +1,7 @@
 (() => {
   "use strict";
 
+  window.veloReady = true;
   const root = document.documentElement;
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const css = (name) => getComputedStyle(root).getPropertyValue(name).trim();
@@ -57,7 +58,7 @@
       for (let yb = 1; yb <= top; yb++) {
         const edge = yb >= top - 1;
         if (!edge && (x + yb) % 2 !== 0) continue;
-        ctx.globalAlpha = edge ? 0.34 : 0.13;
+        ctx.globalAlpha = edge ? 0.45 : 0.18;
         ctx.fillStyle = down ? dl : ul;
         dot(x, rows - yb);
       }
@@ -83,29 +84,49 @@
   let resizeTimer;
   addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(drawField, 120); });
 
-  /* motion: each command types itself once, then its output follows */
-  function play(beat) {
-    const code = beat.querySelector("code[data-type]");
-    const reveal = () => {
-      beat.querySelectorAll(".reveal").forEach((el, i) => { el.style.transitionDelay = i * 70 + "ms"; });
-      beat.classList.remove("armed");
-    };
-    if (!code) return reveal();
+  /* motion: each command types itself once, then its output follows line by line */
+  const state = document.getElementById("state");
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  // Split each output block into lines, so that the lines can appear one by one.
+  document.querySelectorAll("pre.out").forEach((pre) => {
+    pre.innerHTML = pre.innerHTML.split("\n").map((l) => '<span class="ln">' + (l || " ") + "</span>").join("");
+    pre.classList.add("split");
+  });
+
+  async function type(code) {
     const text = code.textContent;
-    const step = Math.max(8, Math.min(26, 900 / text.length));
+    const step = Math.max(6, Math.min(24, 700 / text.length));
     code.textContent = "";
     code.classList.add("typing");
-    let n = 0;
-    const tick = () => {
-      n = Math.min(text.length, n + 1);
+    for (let n = 1; n <= text.length; n++) {
       code.textContent = text.slice(0, n);
-      if (n < text.length) setTimeout(tick, step);
-      else setTimeout(() => { code.classList.remove("typing"); reveal(); }, 160);
-    };
-    setTimeout(tick, 220);
+      await wait(step);
+    }
+    await wait(140);
+    code.classList.remove("typing");
+    code.classList.add("typed");
   }
 
-  if (!reduce && "IntersectionObserver" in window) {
+  async function play(beat) {
+    for (const el of beat.querySelectorAll("code[data-type], pre.out, .reveal")) {
+      if (el.matches("code[data-type]")) {
+        await type(el);
+      } else if (el.matches("pre.out")) {
+        const lines = el.querySelectorAll(".ln");
+        for (const ln of lines) {
+          ln.classList.add("shown");
+          await wait(lines.length > 8 ? 26 : 70);
+        }
+      } else {
+        el.classList.add("shown");
+        await wait(90);
+      }
+    }
+    if (beat.id === "run") state.textContent = "✓ COMPLETE";
+  }
+
+  if (root.classList.contains("motion")) {
     const io = new IntersectionObserver((entries) => {
       for (const e of entries) {
         if (!e.isIntersecting) continue;
@@ -113,7 +134,7 @@
         play(e.target);
       }
     }, { rootMargin: "0px 0px -18% 0px" });
-    document.querySelectorAll("[data-beat]").forEach((b) => { b.classList.add("armed"); io.observe(b); });
+    document.querySelectorAll("[data-beat]").forEach((b) => io.observe(b));
   }
 
   /* the keys: the page answers velo's keys */
@@ -166,12 +187,25 @@
   }
 
   panelButtons.forEach((b) => b.addEventListener("click", () => press(b.dataset.key, true)));
-  document.querySelectorAll(".foot button").forEach((b) => b.addEventListener("click", () => press(b.dataset.key, false)));
+  document.querySelectorAll(".foot .keys button").forEach((b) => b.addEventListener("click", () => press(b.dataset.key, false)));
 
-  const LINKS = { g: 0, r: 1, d: 2, a: 3 };
-  const linkEls = document.querySelectorAll(".links a");
+  // Single-key shortcuts can be turned off (WCAG 2.1.4). The choice is saved.
+  const hotkeys = document.getElementById("hotkeys");
+  let keysOn = true;
+  try { keysOn = localStorage.getItem("velo-keys") !== "off"; } catch (e) { /* storage is optional */ }
+  const syncKeys = () => {
+    hotkeys.setAttribute("aria-pressed", String(keysOn));
+    hotkeys.textContent = keysOn ? "keys on" : "keys off";
+  };
+  hotkeys.addEventListener("click", () => {
+    keysOn = !keysOn;
+    try { localStorage.setItem("velo-keys", keysOn ? "on" : "off"); } catch (e) { /* storage is optional */ }
+    syncKeys();
+  });
+  syncKeys();
+
   addEventListener("keydown", (e) => {
-    if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented) return;
+    if (!keysOn || e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented) return;
     const t = e.target;
     if (t.closest && t.closest("input, textarea, select, [contenteditable]")) return;
     let key = e.key;
@@ -180,7 +214,6 @@
       key = "enter";
     }
     if (key === "Escape") key = "enter";
-    if (key in LINKS) { location.href = linkEls[LINKS[key]].href; return; }
     if (!(key in SCREENS)) return;
     e.preventDefault();
     press(key, false);

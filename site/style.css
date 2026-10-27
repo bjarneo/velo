@@ -110,11 +110,12 @@ a:hover { color: var(--cyan); text-decoration-color: currentColor; }
   position: relative;
   max-width: 1240px;
   margin: clamp(10px, 3vw, 40px) auto;
-  background: var(--bg);
   border: 2px solid transparent;
-  border-image: linear-gradient(135deg, var(--cyan), var(--mag)) 1;
+  background:
+    linear-gradient(var(--bg), var(--bg)) padding-box,
+    linear-gradient(135deg, var(--cyan), var(--mag)) border-box;
+  background-attachment: scroll, fixed;
   box-shadow: 0 24px 80px -20px rgb(0 0 0 / .6);
-  transition: background-color .5s cubic-bezier(.16, 1, .3, 1);
 }
 
 .inner { padding: var(--pad); padding-bottom: 0; }
@@ -165,7 +166,7 @@ h2 {
   font-size: clamp(15px, 1.4vw, 18px);
 }
 
-.comment { margin: 10px 0 0; color: var(--muted); max-width: 75ch; }
+.comment { margin: 10px 0 0; color: var(--muted); max-width: 80ch; }
 
 .cmd {
   display: flex;
@@ -212,6 +213,7 @@ pre.out {
   scrollbar-width: thin;
 }
 pre.out .dim { color: var(--muted); }
+pre.out .ln { display: block; transition: opacity .22s cubic-bezier(.16, 1, .3, 1); }
 
 /* velo panels: 1px rounded border, title set into the top border */
 .panel {
@@ -331,11 +333,10 @@ pre.out .dim { color: var(--muted); }
 
 /* the session close */
 .close { padding-bottom: var(--gap); }
-.links { display: flex; flex-wrap: wrap; gap: 10px 26px; margin-top: 22px; }
-.links a { display: inline-flex; gap: 10px; align-items: center; color: var(--fg); text-decoration: none; }
-.links a .cap { padding: 0 8px; background: var(--sel); font-weight: 700; }
-.links a:hover .cap { background: var(--acc); color: var(--bg); }
-.links a:hover { color: var(--acc); }
+.links { margin-top: 26px; max-width: 640px; }
+.links dl { display: grid; grid-template-columns: 9ch 1fr; gap: 6px 14px; margin: 0; }
+.links dt { color: var(--muted); }
+.links dd { margin: 0; overflow-wrap: anywhere; }
 .cursor {
   display: inline-block;
   width: .6em;
@@ -375,13 +376,19 @@ pre.out .dim { color: var(--muted); }
 }
 .foot button .cap { padding: 0 6px; background: var(--sel); color: var(--fg); font-weight: 700; }
 .foot button:hover { color: var(--fg); }
+.foot-right { display: flex; align-items: center; gap: 16px; }
 .foot .theme-name { color: var(--muted); white-space: nowrap; }
+.foot .hotkeys { color: var(--muted); white-space: nowrap; }
+.foot .hotkeys[aria-pressed="true"] { color: var(--grn); }
 
-/* typing motion. app.js arms a beat only when JavaScript runs and motion is allowed */
-.armed .reveal { opacity: 0; transform: translateY(6px); }
+/* typing motion. The head script sets html.motion when JavaScript runs and motion is allowed */
 .reveal { transition: opacity .5s cubic-bezier(.16, 1, .3, 1), transform .5s cubic-bezier(.16, 1, .3, 1); }
-.armed .step .bar { transform: scaleX(0); }
+.motion .reveal:not(.shown) { opacity: 0; transform: translateY(6px); }
+.motion .cmd:has(> code[data-type]:not(.typing):not(.typed)) { visibility: hidden; }
+.motion pre.out:not(.split) { visibility: hidden; }
+.motion pre.out .ln:not(.shown) { opacity: 0; }
 .step .bar { transition: transform 1s cubic-bezier(.16, 1, .3, 1); }
+.motion .reveal:not(.shown) .step .bar { transform: scaleX(0); }
 .typing::after {
   content: "";
   display: inline-block;
@@ -405,10 +412,12 @@ pre.out .dim { color: var(--muted); }
 @media (max-width: 560px) {
   body { font-size: 14px; }
   .panel > .tag:not(.bottom) { display: none; }
-  pre.out { white-space: pre-wrap; overflow-wrap: anywhere; }
+  pre.out.wrap { white-space: pre-wrap; overflow-wrap: anywhere; }
+  pre.out.wrap .ln { padding-left: 2ch; text-indent: -2ch; }
   .window { margin: 8px; }
-  .cmd { flex-wrap: wrap; gap: 6px 10px; }
-  .cmd code { flex-basis: 100%; order: 3; }
+  .cmd { display: block; }
+  .cmd .prompt { margin-right: 8px; }
+  .cmd .keycap { display: inline-flex; margin-left: 8px; vertical-align: 1px; }
   .bar .status { font-size: 12px; }
   .foot .keys button:nth-child(n+5) { display: none; }
 }

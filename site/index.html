@@ -19,6 +19,11 @@
 <script>
   // Apply the saved theme before the first paint.
   try { var t = localStorage.getItem("velo-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  // Typing motion starts hidden from the first paint. If app.js does not run, show everything.
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches && "IntersectionObserver" in window) {
+    document.documentElement.classList.add("motion");
+    setTimeout(function () { if (!window.veloReady) document.documentElement.classList.remove("motion"); }, 3000);
+  }
 </script>
 </head>
 <body>
@@ -30,26 +35,26 @@
       <a class="badge" href="#top" aria-label="velo">
         <svg viewBox="0 0 412 118" role="img" aria-hidden="true"><rect class="b-bg" width="412" height="118"/><path class="b-fg" d="M62.92 82.44L93.64 82.44L93.64 35.72ZZM179.33 82.44L167.55 35.72L175.82 35.72L182.91 66.19Q183.49 68.42 183.94 71.05Q184.46 73.61 184.71 75.14Q184.96 73.61 185.41 71.05Q185.93 68.42 186.50 66.12L193.35 35.72L201.47 35.72L189.71 82.44L179.33 82.44ZM224.06 82.44L224.06 35.72L252.09 35.72L252.09 42.75L231.94 42.75L231.94 54.92L249.86 54.92L249.86 61.70L231.94 61.70L231.94 75.39L252.09 75.39L252.09 82.44L224.06 82.44ZM279.31 82.44L279.31 35.72L287.31 35.72L287.31 75.20L307.14 75.20L307.14 82.44L279.31 82.44ZM343.88 83.08Q337.16 83.08 333.19 79.23Q329.29 75.39 329.29 68.61L329.29 49.55Q329.29 42.75 333.19 38.92Q337.16 35.08 343.88 35.08Q350.60 35.08 354.51 38.92Q358.47 42.75 358.47 49.48L358.47 68.61Q358.47 75.39 354.51 79.23Q350.60 83.08 343.88 83.08M343.88 76.03Q347.15 76.03 348.80 74.31Q350.47 72.52 350.47 69.25L350.47 48.91Q350.47 45.64 348.80 43.91Q347.15 42.12 343.88 42.12Q340.61 42.12 338.94 43.91Q337.29 45.64 337.29 48.91L337.29 69.25Q337.29 72.52 338.94 74.31Q340.61 76.03 343.88 76.03Z"/></svg>
       </a>
-      <span class="status">v0.1.0 · linux amd64 arm64 · <b>● READY</b></span>
+      <span class="status">v0.1.0 · linux amd64 arm64 · <b id="state">● READY</b></span>
     </header>
 
     <section class="beat" id="install" data-beat>
       <h1><span class="hash">#</span> A speed test for your terminal.</h1>
-      <p class="lede">velo measures latency, download, upload, and bufferbloat against the nearest speedtest.net server. It shows each phase live, in the colors of your Omarchy theme.</p>
+      <p class="lede"><span class="hash">#</span> velo measures latency, download, upload, and bufferbloat against the nearest speedtest.net server. It shows each phase live, in the colors of your Omarchy theme.</p>
 
       <div class="cmd primary">
         <span class="prompt"><span class="tilde">~</span> <span class="arrow">❯</span></span>
         <code data-type>curl -fsSL https://raw.githubusercontent.com/bjarneo/velo/main/install.sh | sh</code>
         <button class="keycap" type="button" data-copy="curl -fsSL https://raw.githubusercontent.com/bjarneo/velo/main/install.sh | sh">copy</button>
       </div>
-      <pre class="out reveal"><span class="dim">velo:</span> download velo_0.1.0_linux_amd64.tar.gz
+      <pre class="out wrap"><span class="dim">velo:</span> download velo_0.1.0_linux_amd64.tar.gz
 <span class="dim">velo:</span> installed 0.1.0 to /home/you/.local/bin/velo
 <span class="dim">velo:</span> run velo to start a test</pre>
 
       <p class="comment reveal"><span class="hash">#</span> Add velo to the Omarchy launcher. Then press Super + Space and type velo.</p>
-      <div class="cmd reveal">
+      <div class="cmd">
         <span class="prompt"><span class="tilde">~</span> <span class="arrow">❯</span></span>
-        <code>omarchy-tui-install velo velo tile https://raw.githubusercontent.com/bjarneo/velo/main/assets/icon.png</code>
+        <code data-type>omarchy-tui-install velo velo tile https://raw.githubusercontent.com/bjarneo/velo/main/assets/icon.png</code>
         <button class="keycap" type="button" data-copy="omarchy-tui-install velo velo tile https://raw.githubusercontent.com/bjarneo/velo/main/assets/icon.png">copy</button>
       </div>
     </section>
@@ -67,7 +72,7 @@
           aria-label="velo runs a real speed test: latency 4.0 ms, download 495.8 Mbps, upload 495.6 Mbps, grade C"></video>
         <span class="tag bottom"><button class="keycap" type="button" id="play">pause</button></span>
       </figure>
-      <pre class="out reveal">velo: session closed · last run ↓ 495.8 ↑ 495.6 Mbps · 4.0 ms · C</pre>
+      <pre class="out wrap">velo: session closed · last run ↓ 495.8 ↑ 495.6 Mbps · 4.0 ms · C</pre>
       <p class="comment reveal"><span class="hash">#</span> --private masks the IP address. Use it when you share a screenshot or a recording.</p>
     </section>
 
@@ -102,7 +107,7 @@
         <span class="prompt"><span class="tilde">~</span> <span class="arrow">❯</span></span>
         <code data-type>velo --help</code>
       </div>
-      <pre class="out reveal">usage: velo [flags]
+      <pre class="out">usage: velo [flags]
 
   -demo
     	simulate the network instead of testing it
@@ -119,9 +124,9 @@
 
 themes: omarchy, tokyo-night, catppuccin, gruvbox, nord, everforest, kanagawa, rosé-pine, matte-black</pre>
       <p class="comment reveal"><span class="hash">#</span> Not on Linux amd64 or arm64? Install with Go 1.26 or later.</p>
-      <div class="cmd reveal">
+      <div class="cmd">
         <span class="prompt"><span class="tilde">~</span> <span class="arrow">❯</span></span>
-        <code>go install github.com/bjarneo/velo@latest</code>
+        <code data-type>go install github.com/bjarneo/velo@latest</code>
         <button class="keycap" type="button" data-copy="go install github.com/bjarneo/velo@latest">copy</button>
       </div>
     </section>
@@ -184,7 +189,7 @@ themes: omarchy, tokyo-night, catppuccin, gruvbox, nord, everforest, kanagawa, r
         <span class="prompt"><span class="tilde">~</span> <span class="arrow">❯</span></span>
         <code data-type>tail -n 1 ~/.local/share/velo/history.jsonl | jq</code>
       </div>
-      <pre class="out json reveal"><span class="p">{</span>
+      <pre class="out json"><span class="p">{</span>
   <span class="k">"id"</span><span class="p">:</span> <span class="n">2</span><span class="p">,</span>
   <span class="k">"time"</span><span class="p">:</span> <span class="s">"2026-10-27T18:31:48+01:00"</span><span class="p">,</span>
   <span class="k">"server"</span><span class="p">:</span> <span class="s">"Lyse Tele AS · Oslo"</span><span class="p">,</span>
@@ -207,11 +212,15 @@ themes: omarchy, tokyo-night, catppuccin, gruvbox, nord, everforest, kanagawa, r
         <span class="prompt"><span class="tilde">~</span> <span class="arrow">❯</span></span>
         <code><span class="cursor" aria-hidden="true"></span></code>
       </div>
-      <nav class="links reveal" aria-label="Project links">
-        <a href="https://github.com/bjarneo/velo"><span class="cap">g</span>source on GitHub</a>
-        <a href="https://github.com/bjarneo/velo/releases/latest"><span class="cap">r</span>release 0.1.0</a>
-        <a href="https://github.com/bjarneo/velo/tree/main/docs"><span class="cap">d</span>documentation</a>
-        <a href="https://github.com/bjarneo/velo/blob/main/AGENTS.md"><span class="cap">a</span>AGENTS.md</a>
+      <nav class="panel links reveal" aria-label="Project links">
+        <span class="title">LINK</span>
+        <span class="tag">bjarneo/velo</span>
+        <dl>
+          <dt>source</dt><dd><a href="https://github.com/bjarneo/velo">github.com/bjarneo/velo</a></dd>
+          <dt>release</dt><dd><a href="https://github.com/bjarneo/velo/releases/latest">v0.1.0 · linux amd64 and arm64</a></dd>
+          <dt>docs</dt><dd><a href="https://github.com/bjarneo/velo/blob/main/docs/measurement.md">measurement</a> · <a href="https://github.com/bjarneo/velo/blob/main/docs/architecture.md">architecture</a></dd>
+          <dt>agents</dt><dd><a href="https://github.com/bjarneo/velo/blob/main/AGENTS.md">AGENTS.md</a></dd>
+        </dl>
       </nav>
     </section>
   </div>
@@ -225,7 +234,10 @@ themes: omarchy, tokyo-night, catppuccin, gruvbox, nord, everforest, kanagawa, r
       <button type="button" data-key="?"><span class="cap">?</span>keys</button>
       <button type="button" data-key="q"><span class="cap">q</span>quit</button>
     </div>
-    <span class="theme-name" id="theme-name">tokyo night · press t</span>
+    <span class="foot-right">
+      <button type="button" class="hotkeys" id="hotkeys" aria-pressed="true">keys on</button>
+      <span class="theme-name" id="theme-name">tokyo night · press t</span>
+    </span>
   </footer>
 </main>
 
