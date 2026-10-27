@@ -201,3 +201,7 @@ For the code structure, read [docs/architecture.md](docs/architecture.md). For i
 - LOSS counts latency probes that failed or took longer than the timeout. velo uses TCP, so this value is not the packet loss of the link.
 - velo depends on the speedtest.net server list. When the list is not available, velo shows an error. Press `⏎` to try again.
 - velo draws with one-column glyphs. Some fonts in East Asian locales draw these glyphs two columns wide. Then the layout breaks.
+
+## License
+
+velo is released under the MIT license. Read [LICENSE](LICENSE) for the full text.

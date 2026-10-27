@@ -116,7 +116,7 @@ tail -n 1 ~/.local/share/velo/history.jsonl
    ```sh
    for arch in amd64 arm64; do
      CGO_ENABLED=0 GOOS=linux GOARCH=$arch go build -trimpath -ldflags "-s -w" -o dist/velo .
-     tar -czf dist/velo_<version>_linux_$arch.tar.gz -C dist velo -C .. README.md
+     tar -czf dist/velo_<version>_linux_$arch.tar.gz -C dist velo -C .. README.md LICENSE
    done
    (cd dist && sha256sum *.tar.gz > checksums.txt)
    ```
